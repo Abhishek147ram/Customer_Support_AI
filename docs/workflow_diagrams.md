@@ -47,13 +47,22 @@ This diagram illustrates the flow of data within the system, showing where data 
 
 ```mermaid
 graph LR
-    A[Customer Input] --> B(FastAPI Endpoint)
-    B -- Raw Ticket Data --> C{Data Validation/Preprocessing}
-    C -- Cleaned Data --> D[Database (Tickets)]
-    C -- Text for AI --> E[LLM Service (Embeddings/Generation)]
-    E -- AI Insights --> D
-    D -- Historical Data --> E
-    D -- Query Results --> F[FastAPI Endpoint (Read)]
-    F --> G[Support Agent UI]
-    F --> H[Customer UI]
+    A[Customer Input] --> B[FastAPI Endpoint]
+
+    B --> C[Data Validation and Preprocessing]
+
+    C --> D[(Database Tickets)]
+
+    C --> E[LLM Service - Embeddings and Generation]
+
+    E --> F[AI Insights]
+
+    F --> D
+
+    D --> G[FastAPI Read Layer]
+
+    G --> H[Support Agent UI]
+    G --> I[Customer UI]
+
+    D --> E
 ```
