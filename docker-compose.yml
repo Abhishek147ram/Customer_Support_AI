@@ -1,0 +1,45 @@
+version: '3.9'
+
+services:
+  app:
+    build: .
+    container_name: customer_support_ai_app
+
+    ports:
+      - '8000:8000'
+
+    env_file:
+      - .env
+
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - OLLAMA_URL=${OLLAMA_URL}
+      - OLLAMA_MODEL=${OLLAMA_MODEL}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - TICKET_PRIORITY_THRESHOLD=${TICKET_PRIORITY_THRESHOLD}
+      - ESCALATION_CONFIDENCE_THRESHOLD=${ESCALATION_CONFIDENCE_THRESHOLD}
+
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+
+    restart: unless-stopped
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+# Optional services (disabled for now)
+
+#  ollama:
+#    image: ghcr.io/ollama/ollama:latest
+#    container_name: customer_support_ai_ollama
+#    ports:
+#      - '11434:11434'
+#    restart: unless-stopped
+
+#  redis:
+#    image: redis:7-alpine
+#    container_name: customer_support_ai_redis
+#    ports:
+#      - '6379:6379'
+#    restart: unless-stopped

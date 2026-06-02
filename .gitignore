@@ -1,0 +1,25 @@
+# Environment
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Database
+*.db
+*.sqlite3
+
+# Coverage reports
+.coverage
+
+# Logs
+logs/
+
+# Vector DB / embeddings
+data/vector_store/
+
+# IDE
+.vscode/
+
+# Jupyter
+.ipynb_checkpoints/
