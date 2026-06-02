@@ -4,7 +4,7 @@ from typing import Callable
 
 from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
-
+from fastapi.exceptions import RequestValidationError
 from app.config.logger import logger
 from app.config.settings import settings
 from app.database.base import Base
@@ -85,26 +85,57 @@ async def measure_request_latency(request: Request, call_next: Callable):
 # Exception Handlers
 # -----------------------------
 @app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
+async def http_exception_handler(
+    request: Request,
+    exc: HTTPException,
+):
     logger.warning(
-        f"HTTPException {exc.status_code} on {request.method} {request.url.path}"
+        f"HTTPException {exc.status_code} on "
+        f"{request.method} {request.url.path}: {exc.detail}"
     )
+
     return JSONResponse(
         content={"detail": exc.detail},
         status_code=exc.status_code,
     )
 
 
-@app.exception_handler(Exception)
-async def unexpected_exception_handler(request: Request, exc: Exception):
-    logger.exception(
-        f"Unexpected error on {request.method} {request.url.path}"
-    )
-    return JSONResponse(
-        content={"detail": "Internal server error"},
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(
+    request: Request,
+    exc: RequestValidationError,
+):
+    logger.error(
+        f"Validation Error on {request.method} "
+        f"{request.url.path}: {exc.errors()}"
     )
 
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "detail": exc.errors(),
+            "body": getattr(exc, "body", None),
+        },
+    )
+
+
+@app.exception_handler(Exception)
+async def unexpected_exception_handler(
+    request: Request,
+    exc: Exception,
+):
+    logger.exception(
+        f"Unexpected error on "
+        f"{request.method} {request.url.path}"
+    )
+
+    return JSONResponse(
+        content={
+            "detail": "Internal server error",
+            "error": str(exc),
+        },
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    )
 
 # -----------------------------
 # Startup Event
