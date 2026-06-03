@@ -1,4 +1,3 @@
-# app/config/settings.py
 from typing import List, Optional, Literal
 from pydantic import Field, AnyUrl, ConfigDict
 from pydantic_settings import BaseSettings
