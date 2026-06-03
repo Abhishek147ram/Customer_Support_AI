@@ -18,24 +18,17 @@ from app.services.llm_service import OllamaClient
 from app.utils.observability import build_error_response, get_request_context
 
 
-# -----------------------------
-# FastAPI App Initialization
-# -----------------------------
 app = FastAPI(
     title="AI-Powered Customer Support Automation System",
     version="0.1.0",
     description="Backend API for a local AI support ticket automation system.",
 )
 
-# Routers
 app.include_router(health_router)
 app.include_router(ticket_router, prefix="/ticket", tags=["ticket"])
 app.include_router(tickets_router, prefix="/tickets", tags=["tickets"])
 
 
-# -----------------------------
-# Middleware: Latency Tracking
-# -----------------------------
 @app.middleware("http")
 async def measure_request_latency(request: Request, call_next: Callable):
     start_time = time.perf_counter()
@@ -81,9 +74,6 @@ async def measure_request_latency(request: Request, call_next: Callable):
     return response
 
 
-# -----------------------------
-# Exception Handlers
-# -----------------------------
 @app.exception_handler(HTTPException)
 async def http_exception_handler(
     request: Request,
@@ -137,25 +127,17 @@ async def unexpected_exception_handler(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
     )
 
-# -----------------------------
-# Startup Event
-# -----------------------------
 @app.on_event("startup")
 async def startup_event() -> None:
     logger.info(
         f"Starting application with database_url={settings.database_url}"
     )
 
-    # Create DB tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    # Metrics
     app.state.metrics = MetricsCollector()
 
-    # -----------------------------
-    # LLM Initialization and Warmup
-    # -----------------------------
     app.state.llm_ready = False
     app.state.llm_health = {}
     app.state.ticket_processor = None
@@ -164,7 +146,6 @@ async def startup_event() -> None:
     async def _perform_llm_warmup() -> None:
         llm_client = OllamaClient()
 
-        # small delay avoids Ollama race condition at startup
         await asyncio.sleep(1)
 
         model_available, health_info = await llm_client.check_health(warmup=True)
@@ -185,7 +166,6 @@ async def startup_event() -> None:
 
     if settings.ollama_health_check_enabled:
         if settings.fallback_to_human:
-            # Allow the service to start immediately while the model warms up in the background.
             app.state.llm_warmup_task = asyncio.create_task(_perform_llm_warmup())
 
             def _log_warmup_result(task: asyncio.Task) -> None:
@@ -210,9 +190,6 @@ async def startup_event() -> None:
         await app.state.ticket_processor.start()
 
 
-# -----------------------------
-# Shutdown Event
-# -----------------------------
 @app.on_event("shutdown")
 async def shutdown_event() -> None:
     logger.info("Shutting down application")
@@ -230,9 +207,6 @@ async def shutdown_event() -> None:
         await ticket_processor.stop()
 
 
-# -----------------------------
-# Root Endpoint
-# -----------------------------
 @app.get("/", summary="Root endpoint")
 async def root() -> dict:
     return {
@@ -240,10 +214,6 @@ async def root() -> dict:
         "status": "ready",
     }
 
-
-# -----------------------------
-# Metrics Endpoint
-# -----------------------------
 @app.get("/metrics", summary="Metrics endpoint")
 async def metrics() -> Response:
     metrics_collector = getattr(app.state, "metrics", None)
