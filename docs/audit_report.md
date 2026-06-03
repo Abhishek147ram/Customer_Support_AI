@@ -82,10 +82,6 @@ The project demonstrates:
 * Demo assets and screenshots
 * Scalable architecture approach
 
-### Submission Confidence Score
-
-**9/10**
-
 ### Recommendation
 
 Perform one final manual verification for:
