@@ -1,5 +1,3 @@
-# app/services/llm_service.py
-
 import json
 import time
 from typing import Any, Dict, List, Optional, Tuple
@@ -319,7 +317,6 @@ class OllamaClient:
             text
         )
 
-        # normalize list outputs
         for field in [
             "follow_up_actions",
             "recommended_reply",
@@ -338,7 +335,6 @@ class OllamaClient:
                     for item in value
                 )
 
-        # defaults
         payload.setdefault(
             "confidence_score",
             0.0
